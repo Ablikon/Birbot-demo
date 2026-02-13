@@ -2,17 +2,12 @@ import { useState, useMemo } from 'react';
 import {
   Table,
   Input,
-  Switch,
   Tag,
   Avatar,
   Space,
   Typography,
   Card,
   Button,
-  InputNumber,
-  Tooltip,
-  Row,
-  Col,
   Select,
   Drawer,
   Descriptions,
@@ -42,11 +37,10 @@ function enrichProducts(products) {
     ...p,
     position: Math.floor(Math.random() * 20) + 1,
     minPrice: Math.round(p.price * 0.85),
-    maxPrice: Math.round(p.price * 2.5),
     step: [5, 10, 25, 50, 100, 105][i % 6],
-    decreaseEnabled: i % 3 !== 0,
-    increaseEnabled: i % 2 === 0,
-    status: p.isActive ? 'active' : 'archived',
+    // priceMode: 'down' | 'up' | 'off'
+    priceMode: i % 3 === 0 ? 'off' : i % 2 === 0 ? 'down' : 'up',
+    status: p.isActive ? 'active' : 'inactive',
   }));
 }
 
@@ -85,19 +79,20 @@ export default function Products() {
           p.brand?.toLowerCase().includes(q)
       );
     }
-    if (activeTab === 'active') result = result.filter((p) => p.status === 'active');
-    if (activeTab === 'archived') result = result.filter((p) => p.status === 'archived');
+    if (activeTab === 'all') result = result.filter((p) => p.status === 'active');
+    if (activeTab === 'inactive') result = result.filter((p) => p.status === 'inactive');
     if (categoryFilter) {
       result = result.filter((p) => p.category_full_path?.includes(categoryFilter));
     }
     return result;
   }, [products, search, activeTab, categoryFilter]);
 
-  const handleToggle = (id, field, checked) => {
+  const handlePriceModeChange = (id, mode) => {
     setProducts((prev) =>
-      prev.map((p) => (p._id === id ? { ...p, [field]: checked } : p))
+      prev.map((p) => (p._id === id ? { ...p, priceMode: mode } : p))
     );
-    message.success({ content: checked ? 'Включено' : 'Отключено', duration: 1 });
+    const labels = { down: 'Снижение', up: 'Поднятие', off: 'Выключено' };
+    message.success({ content: labels[mode], duration: 1 });
   };
 
   const openDetail = (product) => {
@@ -106,19 +101,28 @@ export default function Products() {
   };
 
   const activeCount = products.filter((p) => p.status === 'active').length;
-  const archivedCount = products.filter((p) => p.status === 'archived').length;
+  const inactiveCount = products.filter((p) => p.status === 'inactive').length;
 
   const tabItems = [
-    { key: 'all', label: `Все (${products.length})` },
-    { key: 'active', label: `Активные (${activeCount})` },
-    { key: 'archived', label: `Архив (${archivedCount})` },
+    { key: 'all', label: `Активные (${activeCount})` },
+    { key: 'inactive', label: `Неактивные (${inactiveCount})` },
   ];
+
+  const priceModeOptions = [
+    { value: 'down', label: 'Снижение' },
+    { value: 'off', label: 'Выкл' },
+    { value: 'up', label: 'Поднятие' },
+  ];
+
+  const priceModeColor = { down: '#389e0d', up: '#1677ff', off: '#d9d9d9' };
+  const priceModeTag = { down: 'green', up: 'blue', off: 'default' };
+  const priceModeLabel = { down: 'Снижение', up: 'Поднятие', off: 'Выкл' };
 
   const columns = [
     {
       title: 'Товар',
       key: 'product',
-      width: isMobile ? 200 : 340,
+      width: isMobile ? 200 : 360,
       fixed: isMobile ? 'left' : undefined,
       render: (_, record) => (
         <Flex gap={10} align="center">
@@ -149,8 +153,7 @@ export default function Products() {
       title: 'Цена',
       dataIndex: 'price',
       key: 'price',
-      width: 100,
-      sorter: (a, b) => a.price - b.price,
+      width: 110,
       render: (v) => <Text strong style={{ fontSize: 13 }}>{v.toLocaleString('ru-RU')} ₸</Text>,
     },
     ...(isMobile ? [] : [
@@ -158,13 +161,6 @@ export default function Products() {
         title: 'Мин.',
         dataIndex: 'minPrice',
         key: 'minPrice',
-        width: 90,
-        render: (v) => <Text type="secondary" style={{ fontSize: 13 }}>{v.toLocaleString('ru-RU')}</Text>,
-      },
-      {
-        title: 'Макс.',
-        dataIndex: 'maxPrice',
-        key: 'maxPrice',
         width: 100,
         render: (v) => <Text type="secondary" style={{ fontSize: 13 }}>{v.toLocaleString('ru-RU')}</Text>,
       },
@@ -172,7 +168,7 @@ export default function Products() {
         title: 'Шаг',
         dataIndex: 'step',
         key: 'step',
-        width: 60,
+        width: 80,
         render: (v) => <Text style={{ fontSize: 13 }}>{v}</Text>,
       },
     ]),
@@ -180,7 +176,8 @@ export default function Products() {
       title: 'Позиция',
       dataIndex: 'position',
       key: 'position',
-      width: 80,
+      width: 95,
+      align: 'center',
       sorter: (a, b) => a.position - b.position,
       render: (v) => (
         <Tag
@@ -191,38 +188,35 @@ export default function Products() {
         </Tag>
       ),
     },
-    ...(isMobile ? [] : [
-      {
-        title: 'Снижение',
-        key: 'decrease',
-        width: 80,
-        align: 'center',
-        render: (_, record) => (
-          <Switch
-            checked={record.decreaseEnabled}
-            onChange={(checked) => handleToggle(record._id, 'decreaseEnabled', checked)}
-            size="small"
-          />
-        ),
-      },
-      {
-        title: 'Поднятие',
-        key: 'increase',
-        width: 80,
-        align: 'center',
-        render: (_, record) => (
-          <Switch
-            checked={record.increaseEnabled}
-            onChange={(checked) => handleToggle(record._id, 'increaseEnabled', checked)}
-            size="small"
-          />
-        ),
-      },
-    ]),
+    {
+      title: 'Режим',
+      key: 'priceMode',
+      width: isMobile ? 95 : 120,
+      align: 'center',
+      render: (_, record) => (
+        <Select
+          size="small"
+          value={record.priceMode}
+          onChange={(val) => handlePriceModeChange(record._id, val)}
+          options={priceModeOptions}
+          variant="borderless"
+          popupMatchSelectWidth={false}
+          style={{ width: '100%' }}
+          labelRender={({ value }) => (
+            <Tag
+              color={priceModeTag[value]}
+              style={{ margin: 0, fontSize: 11, cursor: 'pointer' }}
+            >
+              {priceModeLabel[value]}
+            </Tag>
+          )}
+        />
+      ),
+    },
     {
       title: '',
       key: 'actions',
-      width: 40,
+      width: 44,
       render: (_, record) => (
         <Button
           type="text"
@@ -305,7 +299,7 @@ export default function Products() {
           columns={columns}
           rowKey="_id"
           size="small"
-          scroll={{ x: isMobile ? 500 : 1000 }}
+          scroll={{ x: isMobile ? 500 : undefined }}
           pagination={{
             pageSize: isMobile ? 10 : pageSize,
             showSizeChanger: !isMobile,
@@ -369,11 +363,8 @@ export default function Products() {
                 <Descriptions.Item label={<Text type="secondary" style={{ fontSize: 12 }}>Шаг</Text>} span={1}>
                   {selectedProduct.step} ₸
                 </Descriptions.Item>
-                <Descriptions.Item label={<Text type="secondary" style={{ fontSize: 12 }}>Мин.</Text>} span={1}>
+                <Descriptions.Item label={<Text type="secondary" style={{ fontSize: 12 }}>Мин. цена</Text>} span={2}>
                   {selectedProduct.minPrice.toLocaleString('ru-RU')} ₸
-                </Descriptions.Item>
-                <Descriptions.Item label={<Text type="secondary" style={{ fontSize: 12 }}>Макс.</Text>} span={1}>
-                  {selectedProduct.maxPrice.toLocaleString('ru-RU')} ₸
                 </Descriptions.Item>
               </Descriptions>
             </Card>
@@ -406,15 +397,24 @@ export default function Products() {
 
             <Divider style={{ margin: '14px 0' }} />
 
-            <Flex gap={24}>
-              <Space>
-                <Text type="secondary" style={{ fontSize: 12 }}>Снижение</Text>
-                <Switch checked={selectedProduct.decreaseEnabled} size="small" />
-              </Space>
-              <Space>
-                <Text type="secondary" style={{ fontSize: 12 }}>Поднятие</Text>
-                <Switch checked={selectedProduct.increaseEnabled} size="small" />
-              </Space>
+            <Flex align="center" gap={12}>
+              <Text type="secondary" style={{ fontSize: 12 }}>Режим цены:</Text>
+              <Select
+                size="small"
+                value={selectedProduct.priceMode}
+                onChange={(val) => handlePriceModeChange(selectedProduct._id, val)}
+                options={priceModeOptions}
+                popupMatchSelectWidth={false}
+                style={{ minWidth: 110 }}
+                labelRender={({ value }) => (
+                  <Tag
+                    color={priceModeTag[value]}
+                    style={{ margin: 0, fontSize: 11 }}
+                  >
+                    {priceModeLabel[value]}
+                  </Tag>
+                )}
+              />
             </Flex>
           </>
         )}

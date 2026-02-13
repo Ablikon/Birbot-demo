@@ -21,15 +21,6 @@ const MOCK_STORES = [
     productsCount: 0,
     createdAt: '2025-11-20',
   },
-  {
-    id: 'store_9i0j1k2l',
-    name: 'ИП Султанов',
-    marketplace: 'halyk',
-    botStatus: 'unpaid',
-    whatsappStatus: 'not_connected',
-    productsCount: 0,
-    createdAt: '2026-01-10',
-  },
 ];
 
 export function StoreProvider({ children }) {
@@ -40,6 +31,7 @@ export function StoreProvider({ children }) {
     const newStore = {
       ...store,
       id: `store_${Date.now()}`,
+      marketplace: 'kaspi',
       botStatus: 'unpaid',
       whatsappStatus: 'not_connected',
       productsCount: 0,
@@ -49,8 +41,18 @@ export function StoreProvider({ children }) {
     return newStore;
   };
 
+  const deleteStore = (id) => {
+    setStores((prev) => prev.filter((s) => s.id !== id));
+    if (activeStore?.id === id) {
+      setActiveStore((prev) => {
+        const remaining = stores.filter((s) => s.id !== id);
+        return remaining[0] || null;
+      });
+    }
+  };
+
   return (
-    <StoreContext.Provider value={{ stores, activeStore, setActiveStore, addStore }}>
+    <StoreContext.Provider value={{ stores, activeStore, setActiveStore, addStore, deleteStore }}>
       {children}
     </StoreContext.Provider>
   );

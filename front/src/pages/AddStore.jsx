@@ -20,6 +20,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
+import kaspiLogo from '../assets/kaspi img.svg';
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -131,19 +132,9 @@ export default function AddStore() {
           Добавление магазина
         </Title>
 
-        {/* Marketplace selector */}
+        {/* Marketplace logo */}
         <Flex justify="center" style={{ marginBottom: isMobile ? 16 : 24 }}>
-          <Segmented
-            value={marketplace}
-            onChange={setMarketplace}
-            options={[
-              { label: 'Kaspi', value: 'kaspi' },
-              { label: 'Halyk Market', value: 'halyk' },
-            ]}
-            disabled={step > 0}
-            block={isMobile}
-            style={isMobile ? { width: '100%' } : undefined}
-          />
+          <img src={kaspiLogo} alt="Kaspi" style={{ height: 22 }} />
         </Flex>
 
         {/* Steps indicator */}

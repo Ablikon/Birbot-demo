@@ -4,9 +4,7 @@ import {
   Col,
   Card,
   Typography,
-  Avatar,
   Flex,
-  List,
   Grid,
 } from 'antd';
 import {
@@ -15,7 +13,7 @@ import {
   ShoppingOutlined,
   DollarOutlined,
   InboxOutlined,
-  StarOutlined,
+  TrophyOutlined,
 } from '@ant-design/icons';
 import { Area, Column } from '@ant-design/charts';
 import { useStore } from '../context/StoreContext';
@@ -24,44 +22,31 @@ import productsData from '../assets/products.json';
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
 
+const MONTHS_SHORT = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+
 function computeStats() {
   const total = productsData.length;
   const active = productsData.filter((p) => p.isActive).length;
-  const avgRating = (productsData.reduce((s, p) => s + (p.rating || 0), 0) / total).toFixed(1);
-  const totalReviews = productsData.reduce((s, p) => s + (p.reviewCount || 0), 0);
+  const top1Count = Math.floor(total * 0.06);
 
-  const categories = {};
-  productsData.forEach((p) => {
-    const cat = p.category_full_path?.split(' > ')[1] || 'Другое';
-    categories[cat] = (categories[cat] || 0) + 1;
-  });
-  const topCategories = Object.entries(categories)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name, count]) => ({ name, count }));
-
-  const brands = {};
-  productsData.forEach((p) => {
-    if (p.brand) brands[p.brand] = (brands[p.brand] || 0) + 1;
-  });
-  const topBrands = Object.entries(brands)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name, count]) => ({ name, count }));
-
-  const recentProducts = [...productsData]
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 5);
-
-  return { total, active, avgRating, totalReviews, topCategories, topBrands, recentProducts };
+  return { total, active, top1Count };
 }
 
-function generateWeeklyData() {
-  const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-  return days.map((day) => ({
-    day,
-    orders: Math.floor(Math.random() * 60 + 15),
-  }));
+function generateLast7DaysData() {
+  const data = [];
+  const now = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const label = i === 0
+      ? 'Сегодня'
+      : `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
+    data.push({
+      day: label,
+      orders: Math.floor(Math.random() * 60 + 15),
+    });
+  }
+  return data;
 }
 
 function generateDailyTrend() {
@@ -71,7 +56,7 @@ function generateDailyTrend() {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
     data.push({
-      date: `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, '0')}`,
+      date: `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`,
       value: Math.floor(Math.random() * 200000 + 50000),
     });
   }
@@ -93,7 +78,7 @@ const iconStyle = (bg) => ({
 export default function Dashboard() {
   const { activeStore } = useStore();
   const stats = useMemo(computeStats, []);
-  const weeklyData = useMemo(generateWeeklyData, []);
+  const weeklyData = useMemo(generateLast7DaysData, []);
   const trendData = useMemo(generateDailyTrend, []);
   const screens = useBreakpoint();
   const isMobile = !screens.md;
@@ -124,16 +109,16 @@ export default function Dashboard() {
       bg: '#f5f5f5',
     },
     {
-      title: 'Средний рейтинг',
-      value: stats.avgRating,
-      change: `${stats.totalReviews.toLocaleString('ru-RU')} отзывов`,
+      title: 'Товаров в ТОП-1',
+      value: String(stats.top1Count),
+      change: `из ${stats.total} товаров`,
       up: null,
-      icon: <StarOutlined style={{ color: '#8c8c8c' }} />,
+      icon: <TrophyOutlined style={{ color: '#8c8c8c' }} />,
       bg: '#f5f5f5',
     },
   ];
 
-  const chartHeight = isMobile ? 180 : 230;
+  const chartHeight = isMobile ? 220 : 300;
 
   const columnConfig = {
     data: weeklyData,
@@ -142,9 +127,16 @@ export default function Dashboard() {
     color: '#595959',
     columnStyle: { radius: [4, 4, 0, 0], fill: '#595959' },
     height: chartHeight,
+    marginTop: 24,
+    label: {
+      text: 'orders',
+      position: 'top',
+      offset: 16,
+      style: { fontSize: 11, fill: '#595959', fontWeight: 500, textAlign: 'center', textBaseline: 'bottom' },
+    },
     axis: {
       y: { label: false, grid: false },
-      x: { label: { style: { fontSize: isMobile ? 11 : 12, fill: '#8c8c8c' } } },
+      x: { label: { style: { fontSize: isMobile ? 10 : 12, fill: '#8c8c8c' } } },
     },
     tooltip: {
       channel: 'y',
@@ -173,8 +165,8 @@ export default function Dashboard() {
         label: { style: { fill: '#8c8c8c', fontSize: 11 } },
       },
       x: {
-        label: { autoRotate: false, style: { fontSize: 10, fill: '#8c8c8c' } },
-        tickCount: isMobile ? 5 : 8,
+        label: { autoRotate: false, style: { fontSize: isMobile ? 9 : 11, fill: '#8c8c8c' } },
+        tickCount: isMobile ? 5 : 7,
       },
     },
     tooltip: {
@@ -223,6 +215,7 @@ export default function Dashboard() {
             size="small"
             title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Выручка за 30 дней</Text>}
             styles={{ body: { padding: isMobile ? '8px 10px 12px' : '12px 16px 16px' } }}
+            style={{ height: '100%' }}
           >
             <Area {...areaConfig} />
           </Card>
@@ -230,90 +223,11 @@ export default function Dashboard() {
         <Col xs={24} lg={10}>
           <Card
             size="small"
-            title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Заказы по дням недели</Text>}
+            title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Заказы за последние 7 дней</Text>}
             styles={{ body: { padding: isMobile ? '8px 10px 12px' : '12px 16px 16px' } }}
+            style={{ height: '100%' }}
           >
             <Column {...columnConfig} />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Bottom row — equal height */}
-      <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
-        <Col xs={24} md={8}>
-          <Card
-            size="small"
-            title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Категории</Text>}
-            style={{ height: '100%' }}
-            styles={{ body: { padding: '4px 0' } }}
-          >
-            <div className="dashboard-list">
-              <List
-                size="small"
-                split={false}
-                dataSource={stats.topCategories}
-                renderItem={(item) => (
-                  <List.Item style={{ borderBottom: 'none', padding: '8px 16px' }}>
-                    <Text ellipsis style={{ maxWidth: isMobile ? '60vw' : 180, fontSize: 13 }}>{item.name}</Text>
-                    <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>{item.count}</Text>
-                  </List.Item>
-                )}
-              />
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} md={8}>
-          <Card
-            size="small"
-            title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Популярные бренды</Text>}
-            style={{ height: '100%' }}
-            styles={{ body: { padding: '4px 0' } }}
-          >
-            <div className="dashboard-list">
-              <List
-                size="small"
-                split={false}
-                dataSource={stats.topBrands}
-                renderItem={(item) => (
-                  <List.Item style={{ borderBottom: 'none', padding: '8px 16px' }}>
-                    <Text ellipsis style={{ maxWidth: isMobile ? '60vw' : 180, fontSize: 13 }}>{item.name}</Text>
-                    <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>{item.count}</Text>
-                  </List.Item>
-                )}
-              />
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} md={8}>
-          <Card
-            size="small"
-            title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Последние товары</Text>}
-            style={{ height: '100%' }}
-            styles={{ body: { padding: '4px 0' } }}
-          >
-            <div className="dashboard-list">
-              <List
-                size="small"
-                split={false}
-                dataSource={stats.recentProducts}
-                renderItem={(item) => (
-                  <List.Item style={{ borderBottom: 'none', padding: '6px 16px' }}>
-                    <Flex gap={10} align="center" style={{ minWidth: 0 }}>
-                      <Avatar
-                        shape="square"
-                        size={34}
-                        src={item.url_picture}
-                        style={{ borderRadius: 6, flexShrink: 0 }}
-                      />
-                      <div style={{ minWidth: 0 }}>
-                        <Text ellipsis style={{ fontSize: 12, display: 'block', maxWidth: isMobile ? '55vw' : 140 }}>{item.title}</Text>
-                        <Text type="secondary" style={{ fontSize: 11 }}>{item.price.toLocaleString('ru-RU')} ₸</Text>
-                      </div>
-                    </Flex>
-                  </List.Item>
-                )}
-              />
-            </div>
           </Card>
         </Col>
       </Row>

@@ -1,12 +1,14 @@
-import { Row, Col, Card, Typography, Tag, Space, Button, Flex, Grid } from 'antd';
+import { Row, Col, Card, Typography, Tag, Space, Button, Flex, Grid, Popconfirm } from 'antd';
 import {
   PlusOutlined,
   CheckCircleFilled,
   CloseCircleFilled,
   ArrowRightOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
+import kaspiLogo from '../assets/kaspi img.svg';
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -20,11 +22,10 @@ const statusLabel = {
 
 const marketplaceLabel = {
   kaspi: { name: 'Kaspi', color: 'default' },
-  halyk: { name: 'Halyk Market', color: 'default' },
 };
 
 export default function Stores() {
-  const { stores, activeStore, setActiveStore } = useStore();
+  const { stores, activeStore, setActiveStore, deleteStore } = useStore();
   const navigate = useNavigate();
   const screens = useBreakpoint();
   const isMobile = !screens.md;
@@ -47,7 +48,7 @@ export default function Stores() {
           <Title level={4} style={{ margin: 0, fontWeight: 600, fontSize: isMobile ? 18 : undefined }}>Мои магазины</Title>
           <Text type="secondary" style={{ fontSize: 13 }}>Управляйте подключенными магазинами</Text>
         </div>
-        <Button
+        {/* <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => navigate('/add-store')}
@@ -55,7 +56,7 @@ export default function Stores() {
           block={isMobile}
         >
           Добавить магазин
-        </Button>
+        </Button> */}
       </Flex>
 
       <Row gutter={[16, 16]}>
@@ -78,9 +79,7 @@ export default function Stores() {
                     <Text strong style={{ fontSize: 15 }}>{store.name}</Text>
                     <Text type="secondary" style={{ fontSize: 11 }}>ID: {store.id}</Text>
                   </Space>
-                  <Tag style={{ margin: 0, fontWeight: 500 }}>
-                    {mp.name}
-                  </Tag>
+                  <img src={kaspiLogo} alt="Kaspi" style={{ height: 16 }} />
                 </Flex>
 
                 <Flex gap={20} style={{ marginBottom: 14 }}>
@@ -98,7 +97,7 @@ export default function Stores() {
                       {statusLabel[store.botStatus]?.text}
                     </Tag>
                   </Space>
-                  <Space direction="vertical" size={2}>
+                  {/* <Space direction="vertical" size={2}>
                     <Text type="secondary" style={{ fontSize: 11 }}>WhatsApp</Text>
                     <Tag
                       color={statusLabel[store.whatsappStatus]?.color}
@@ -111,14 +110,33 @@ export default function Stores() {
                     >
                       {statusLabel[store.whatsappStatus]?.text}
                     </Tag>
-                  </Space>
+                  </Space> */}
                 </Flex>
 
                 <Flex justify="space-between" align="center">
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     Товаров: {store.productsCount}
                   </Text>
-                  <ArrowRightOutlined style={{ color: '#d9d9d9', fontSize: 11 }} />
+                  <Flex gap={8} align="center">
+                    <Popconfirm
+                      title="Удалить магазин?"
+                      description="Это действие нельзя отменить"
+                      onConfirm={(e) => { e.stopPropagation(); deleteStore(store.id); }}
+                      onCancel={(e) => e.stopPropagation()}
+                      okText="Удалить"
+                      cancelText="Отмена"
+                      okButtonProps={{ danger: true }}
+                    >
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ color: '#bfbfbf', fontSize: 12 }}
+                      />
+                    </Popconfirm>
+                    <ArrowRightOutlined style={{ color: '#d9d9d9', fontSize: 11 }} />
+                  </Flex>
                 </Flex>
               </Card>
             </Col>

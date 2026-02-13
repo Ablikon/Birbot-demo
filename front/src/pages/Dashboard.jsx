@@ -4,11 +4,10 @@ import {
   Col,
   Card,
   Typography,
-  Tag,
   Avatar,
-  Space,
   Flex,
   List,
+  Grid,
 } from 'antd';
 import {
   RiseOutlined,
@@ -23,6 +22,7 @@ import { useStore } from '../context/StoreContext';
 import productsData from '../assets/products.json';
 
 const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 function computeStats() {
   const total = productsData.length;
@@ -95,6 +95,8 @@ export default function Dashboard() {
   const stats = useMemo(computeStats, []);
   const weeklyData = useMemo(generateWeeklyData, []);
   const trendData = useMemo(generateDailyTrend, []);
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
 
   const metrics = [
     {
@@ -131,16 +133,18 @@ export default function Dashboard() {
     },
   ];
 
+  const chartHeight = isMobile ? 180 : 230;
+
   const columnConfig = {
     data: weeklyData,
     xField: 'day',
     yField: 'orders',
     color: '#595959',
     columnStyle: { radius: [4, 4, 0, 0], fill: '#595959' },
-    height: 230,
+    height: chartHeight,
     axis: {
       y: { label: false, grid: false },
-      x: { label: { style: { fontSize: 12, fill: '#8c8c8c' } } },
+      x: { label: { style: { fontSize: isMobile ? 11 : 12, fill: '#8c8c8c' } } },
     },
     tooltip: {
       channel: 'y',
@@ -159,7 +163,7 @@ export default function Dashboard() {
       lineWidth: 2,
       stroke: '#595959',
     },
-    height: 230,
+    height: chartHeight,
     axis: {
       y: {
         labelFormatter: (v) => `${(v / 1000).toFixed(0)}k`,
@@ -169,8 +173,8 @@ export default function Dashboard() {
         label: { style: { fill: '#8c8c8c', fontSize: 11 } },
       },
       x: {
-        label: { autoRotate: false, style: { fontSize: 11, fill: '#8c8c8c' } },
-        tickCount: 8,
+        label: { autoRotate: false, style: { fontSize: 10, fill: '#8c8c8c' } },
+        tickCount: isMobile ? 5 : 8,
       },
     },
     tooltip: {
@@ -181,29 +185,29 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <Title level={4} style={{ margin: 0, fontWeight: 600 }}>Обзор</Title>
+      <div style={{ marginBottom: isMobile ? 16 : 24 }}>
+        <Title level={4} style={{ margin: 0, fontWeight: 600, fontSize: isMobile ? 18 : undefined }}>Обзор</Title>
         <Text type="secondary" style={{ fontSize: 13 }}>{activeStore?.name || 'Выберите магазин'}</Text>
       </div>
 
       {/* Metrics */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+      <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
         {metrics.map((m) => (
           <Col xs={12} md={6} key={m.title}>
-            <Card size="small" className="metric-card" styles={{ body: { padding: 16 } }}>
-              <Flex gap={12} align="flex-start">
+            <Card size="small" className="metric-card" styles={{ body: { padding: isMobile ? 12 : 16 } }}>
+              <Flex gap={isMobile ? 8 : 12} align="flex-start">
                 <div style={iconStyle(m.bg)}>
                   {m.icon}
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <Text type="secondary" style={{ fontSize: 11, display: 'block', lineHeight: 1.3 }}>{m.title}</Text>
-                  <div style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.4, color: '#141414' }}>{m.value}</div>
+                  <Text type="secondary" style={{ fontSize: isMobile ? 10 : 11, display: 'block', lineHeight: 1.3 }}>{m.title}</Text>
+                  <div style={{ fontSize: isMobile ? 17 : 22, fontWeight: 600, lineHeight: 1.4, color: '#141414' }}>{m.value}</div>
                   {m.up !== null ? (
-                    <Text style={{ fontSize: 12, color: m.up ? '#389e0d' : '#cf1322' }}>
+                    <Text style={{ fontSize: isMobile ? 11 : 12, color: m.up ? '#389e0d' : '#cf1322' }}>
                       {m.up ? <RiseOutlined /> : <FallOutlined />} {m.change}
                     </Text>
                   ) : (
-                    <Text type="secondary" style={{ fontSize: 12 }}>{m.change}</Text>
+                    <Text type="secondary" style={{ fontSize: isMobile ? 11 : 12 }}>{m.change}</Text>
                   )}
                 </div>
               </Flex>
@@ -213,12 +217,12 @@ export default function Dashboard() {
       </Row>
 
       {/* Charts */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+      <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]} style={{ marginBottom: isMobile ? 16 : 24 }}>
         <Col xs={24} lg={14}>
           <Card
             size="small"
-            title={<Text strong style={{ fontSize: 14 }}>Выручка за 30 дней</Text>}
-            styles={{ body: { padding: '12px 16px 16px' } }}
+            title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Выручка за 30 дней</Text>}
+            styles={{ body: { padding: isMobile ? '8px 10px 12px' : '12px 16px 16px' } }}
           >
             <Area {...areaConfig} />
           </Card>
@@ -226,8 +230,8 @@ export default function Dashboard() {
         <Col xs={24} lg={10}>
           <Card
             size="small"
-            title={<Text strong style={{ fontSize: 14 }}>Заказы по дням недели</Text>}
-            styles={{ body: { padding: '12px 16px 16px' } }}
+            title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Заказы по дням недели</Text>}
+            styles={{ body: { padding: isMobile ? '8px 10px 12px' : '12px 16px 16px' } }}
           >
             <Column {...columnConfig} />
           </Card>
@@ -235,11 +239,11 @@ export default function Dashboard() {
       </Row>
 
       {/* Bottom row — equal height */}
-      <Row gutter={[16, 16]}>
+      <Row gutter={[isMobile ? 10 : 16, isMobile ? 10 : 16]}>
         <Col xs={24} md={8}>
           <Card
             size="small"
-            title={<Text strong style={{ fontSize: 14 }}>Категории</Text>}
+            title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Категории</Text>}
             style={{ height: '100%' }}
             styles={{ body: { padding: '4px 0' } }}
           >
@@ -250,7 +254,7 @@ export default function Dashboard() {
                 dataSource={stats.topCategories}
                 renderItem={(item) => (
                   <List.Item style={{ borderBottom: 'none', padding: '8px 16px' }}>
-                    <Text ellipsis style={{ maxWidth: 180, fontSize: 13 }}>{item.name}</Text>
+                    <Text ellipsis style={{ maxWidth: isMobile ? '60vw' : 180, fontSize: 13 }}>{item.name}</Text>
                     <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>{item.count}</Text>
                   </List.Item>
                 )}
@@ -261,7 +265,7 @@ export default function Dashboard() {
         <Col xs={24} md={8}>
           <Card
             size="small"
-            title={<Text strong style={{ fontSize: 14 }}>Популярные бренды</Text>}
+            title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Популярные бренды</Text>}
             style={{ height: '100%' }}
             styles={{ body: { padding: '4px 0' } }}
           >
@@ -272,7 +276,7 @@ export default function Dashboard() {
                 dataSource={stats.topBrands}
                 renderItem={(item) => (
                   <List.Item style={{ borderBottom: 'none', padding: '8px 16px' }}>
-                    <Text ellipsis style={{ maxWidth: 180, fontSize: 13 }}>{item.name}</Text>
+                    <Text ellipsis style={{ maxWidth: isMobile ? '60vw' : 180, fontSize: 13 }}>{item.name}</Text>
                     <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>{item.count}</Text>
                   </List.Item>
                 )}
@@ -283,7 +287,7 @@ export default function Dashboard() {
         <Col xs={24} md={8}>
           <Card
             size="small"
-            title={<Text strong style={{ fontSize: 14 }}>Последние товары</Text>}
+            title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Последние товары</Text>}
             style={{ height: '100%' }}
             styles={{ body: { padding: '4px 0' } }}
           >
@@ -302,7 +306,7 @@ export default function Dashboard() {
                         style={{ borderRadius: 6, flexShrink: 0 }}
                       />
                       <div style={{ minWidth: 0 }}>
-                        <Text ellipsis style={{ fontSize: 12, display: 'block', maxWidth: 140 }}>{item.title}</Text>
+                        <Text ellipsis style={{ fontSize: 12, display: 'block', maxWidth: isMobile ? '55vw' : 140 }}>{item.title}</Text>
                         <Text type="secondary" style={{ fontSize: 11 }}>{item.price.toLocaleString('ru-RU')} ₸</Text>
                       </div>
                     </Flex>

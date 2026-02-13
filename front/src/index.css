@@ -134,3 +134,112 @@ body {
 .ant-steps-item-finish .ant-steps-item-icon > .ant-steps-icon {
   color: #141414;
 }
+
+/* ======================================
+   MOBILE RESPONSIVE — < 768px
+   ====================================== */
+@media (max-width: 767px) {
+  /* Disable hover transforms on touch */
+  .metric-card:hover,
+  .store-card:hover {
+    transform: none;
+  }
+
+  /* Cards */
+  .ant-card {
+    border-radius: 10px;
+  }
+
+  /* Table header sizing */
+  .ant-table-wrapper .ant-table-thead > tr > th {
+    font-size: 11px !important;
+    padding: 8px 8px !important;
+  }
+  .ant-table-wrapper .ant-table-tbody > tr > td {
+    padding: 10px 8px !important;
+  }
+
+  /* Drawer full width */
+  .ant-drawer-content {
+    border-radius: 0;
+  }
+
+  /* Mobile sidebar drawer */
+  .mobile-sidebar-drawer .ant-drawer-body {
+    background: #fafafa;
+  }
+
+  /* Pagination mobile */
+  .ant-pagination {
+    padding: 8px 12px !important;
+  }
+
+  /* Tab scrollable on mobile */
+  .ant-tabs-nav-list {
+    gap: 0 !important;
+  }
+  .ant-tabs-tab {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
+
+  /* Descriptions on mobile */
+  .ant-descriptions-item-label {
+    font-size: 12px !important;
+  }
+  .ant-descriptions-item-content {
+    font-size: 13px !important;
+  }
+
+  /* Store card spacing */
+  .add-store-card {
+    min-height: 120px;
+  }
+
+  /* Result component mobile */
+  .ant-result {
+    padding: 16px 8px !important;
+  }
+  .ant-result-title {
+    font-size: 18px !important;
+  }
+  .ant-result-subtitle {
+    font-size: 13px !important;
+  }
+
+  /* Steps mobile */
+  .ant-steps-item-title {
+    font-size: 12px !important;
+  }
+
+  /* Message positioning */
+  .ant-message {
+    top: 60px !important;
+  }
+}
+
+/* ======================================
+   SAFE AREA (notch devices)
+   ====================================== */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .app-content {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom)) !important;
+  }
+  .app-header {
+    padding-left: calc(16px + env(safe-area-inset-left)) !important;
+    padding-right: calc(16px + env(safe-area-inset-right)) !important;
+  }
+}
+
+/* ======================================
+   SMALL PHONES — < 375px
+   ====================================== */
+@media (max-width: 374px) {
+  .ant-tabs-tab {
+    padding: 8px 8px !important;
+    font-size: 12px !important;
+  }
+  .metric-card .ant-card-body {
+    padding: 10px !important;
+  }
+}

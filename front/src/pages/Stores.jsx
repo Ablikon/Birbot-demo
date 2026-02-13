@@ -1,4 +1,4 @@
-import { Row, Col, Card, Typography, Tag, Space, Button, Flex } from 'antd';
+import { Row, Col, Card, Typography, Tag, Space, Button, Flex, Grid } from 'antd';
 import {
   PlusOutlined,
   CheckCircleFilled,
@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 
 const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 const statusLabel = {
   paid: { text: 'Оплачено', color: 'success' },
@@ -25,6 +26,8 @@ const marketplaceLabel = {
 export default function Stores() {
   const { stores, activeStore, setActiveStore } = useStore();
   const navigate = useNavigate();
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
 
   const handleSelectStore = (store) => {
     setActiveStore(store);
@@ -33,9 +36,15 @@ export default function Stores() {
 
   return (
     <div>
-      <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
+      <Flex
+        justify="space-between"
+        align={isMobile ? 'flex-start' : 'center'}
+        style={{ marginBottom: isMobile ? 16 : 24 }}
+        vertical={isMobile}
+        gap={isMobile ? 10 : 0}
+      >
         <div>
-          <Title level={4} style={{ margin: 0, fontWeight: 600 }}>Мои магазины</Title>
+          <Title level={4} style={{ margin: 0, fontWeight: 600, fontSize: isMobile ? 18 : undefined }}>Мои магазины</Title>
           <Text type="secondary" style={{ fontSize: 13 }}>Управляйте подключенными магазинами</Text>
         </div>
         <Button
@@ -43,6 +52,7 @@ export default function Stores() {
           icon={<PlusOutlined />}
           onClick={() => navigate('/add-store')}
           style={{ fontWeight: 500 }}
+          block={isMobile}
         >
           Добавить магазин
         </Button>

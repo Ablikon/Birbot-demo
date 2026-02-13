@@ -21,6 +21,7 @@ import {
   Divider,
   Flex,
   Tabs,
+  Grid,
   message,
 } from 'antd';
 import {
@@ -34,10 +35,12 @@ import { useStore } from '../context/StoreContext';
 import productsData from '../assets/products.json';
 
 const { Text, Title } = Typography;
+const { useBreakpoint } = Grid;
 
 function enrichProducts(products) {
   return products.map((p, i) => ({
     ...p,
+    position: Math.floor(Math.random() * 20) + 1,
     minPrice: Math.round(p.price * 0.85),
     maxPrice: Math.round(p.price * 2.5),
     step: [5, 10, 25, 50, 100, 105][i % 6],
@@ -49,6 +52,8 @@ function enrichProducts(products) {
 
 export default function Products() {
   const { activeStore } = useStore();
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState(null);
@@ -113,12 +118,13 @@ export default function Products() {
     {
       title: 'Товар',
       key: 'product',
-      width: 340,
+      width: isMobile ? 200 : 340,
+      fixed: isMobile ? 'left' : undefined,
       render: (_, record) => (
         <Flex gap={10} align="center">
           <Avatar
             shape="square"
-            size={40}
+            size={isMobile ? 36 : 40}
             src={record.url_picture}
             style={{ borderRadius: 8, flexShrink: 0, cursor: 'pointer' }}
             onClick={() => openDetail(record)}
@@ -147,65 +153,72 @@ export default function Products() {
       sorter: (a, b) => a.price - b.price,
       render: (v) => <Text strong style={{ fontSize: 13 }}>{v.toLocaleString('ru-RU')} ₸</Text>,
     },
+    ...(isMobile ? [] : [
+      {
+        title: 'Мин.',
+        dataIndex: 'minPrice',
+        key: 'minPrice',
+        width: 90,
+        render: (v) => <Text type="secondary" style={{ fontSize: 13 }}>{v.toLocaleString('ru-RU')}</Text>,
+      },
+      {
+        title: 'Макс.',
+        dataIndex: 'maxPrice',
+        key: 'maxPrice',
+        width: 100,
+        render: (v) => <Text type="secondary" style={{ fontSize: 13 }}>{v.toLocaleString('ru-RU')}</Text>,
+      },
+      {
+        title: 'Шаг',
+        dataIndex: 'step',
+        key: 'step',
+        width: 60,
+        render: (v) => <Text style={{ fontSize: 13 }}>{v}</Text>,
+      },
+    ]),
     {
-      title: 'Мин.',
-      dataIndex: 'minPrice',
-      key: 'minPrice',
-      width: 90,
-      render: (v) => <Text type="secondary" style={{ fontSize: 13 }}>{v.toLocaleString('ru-RU')}</Text>,
-    },
-    {
-      title: 'Макс.',
-      dataIndex: 'maxPrice',
-      key: 'maxPrice',
-      width: 100,
-      render: (v) => <Text type="secondary" style={{ fontSize: 13 }}>{v.toLocaleString('ru-RU')}</Text>,
-    },
-    {
-      title: 'Шаг',
-      dataIndex: 'step',
-      key: 'step',
-      width: 60,
-      render: (v) => <Text style={{ fontSize: 13 }}>{v}</Text>,
-    },
-    {
-      title: 'Рейтинг',
-      dataIndex: 'rating',
-      key: 'rating',
+      title: 'Позиция',
+      dataIndex: 'position',
+      key: 'position',
       width: 80,
-      sorter: (a, b) => a.rating - b.rating,
+      sorter: (a, b) => a.position - b.position,
       render: (v) => (
-        <Tag color={v >= 4.5 ? 'green' : v >= 3.5 ? 'gold' : 'default'} style={{ margin: 0 }}>
+        <Tag
+          color={v <= 3 ? 'green' : v <= 10 ? 'gold' : 'default'}
+          style={{ margin: 0, minWidth: 32, textAlign: 'center' }}
+        >
           {v}
         </Tag>
       ),
     },
-    {
-      title: 'Снижение',
-      key: 'decrease',
-      width: 80,
-      align: 'center',
-      render: (_, record) => (
-        <Switch
-          checked={record.decreaseEnabled}
-          onChange={(checked) => handleToggle(record._id, 'decreaseEnabled', checked)}
-          size="small"
-        />
-      ),
-    },
-    {
-      title: 'Поднятие',
-      key: 'increase',
-      width: 80,
-      align: 'center',
-      render: (_, record) => (
-        <Switch
-          checked={record.increaseEnabled}
-          onChange={(checked) => handleToggle(record._id, 'increaseEnabled', checked)}
-          size="small"
-        />
-      ),
-    },
+    ...(isMobile ? [] : [
+      {
+        title: 'Снижение',
+        key: 'decrease',
+        width: 80,
+        align: 'center',
+        render: (_, record) => (
+          <Switch
+            checked={record.decreaseEnabled}
+            onChange={(checked) => handleToggle(record._id, 'decreaseEnabled', checked)}
+            size="small"
+          />
+        ),
+      },
+      {
+        title: 'Поднятие',
+        key: 'increase',
+        width: 80,
+        align: 'center',
+        render: (_, record) => (
+          <Switch
+            checked={record.increaseEnabled}
+            onChange={(checked) => handleToggle(record._id, 'increaseEnabled', checked)}
+            size="small"
+          />
+        ),
+      },
+    ]),
     {
       title: '',
       key: 'actions',
@@ -223,86 +236,96 @@ export default function Products() {
 
   return (
     <div>
-      <Flex justify="space-between" align="center" style={{ marginBottom: 20 }}>
+      <Flex
+        justify="space-between"
+        align={isMobile ? 'flex-start' : 'center'}
+        style={{ marginBottom: isMobile ? 12 : 20 }}
+        vertical={isMobile}
+        gap={isMobile ? 10 : 0}
+      >
         <div>
-          <Title level={4} style={{ margin: 0, fontWeight: 600 }}>Товары</Title>
+          <Title level={4} style={{ margin: 0, fontWeight: 600, fontSize: isMobile ? 18 : undefined }}>Товары</Title>
           <Text type="secondary" style={{ fontSize: 13 }}>{activeStore?.name}</Text>
         </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} style={{ fontWeight: 500 }}>Синхронизация</Button>
-        </Space>
+        <Button icon={<ReloadOutlined />} style={{ fontWeight: 500 }} block={isMobile}>
+          Синхронизация
+        </Button>
       </Flex>
 
       <Card size="small" style={{ marginBottom: 0 }} styles={{ body: { padding: 0 } }}>
-        {/* Tabs as filter */}
-        <div style={{ padding: '0 20px' }}>
+        {/* Tabs */}
+        <div style={{ padding: isMobile ? '0 12px' : '0 20px', overflowX: 'auto' }}>
           <Tabs
             activeKey={activeTab}
             onChange={setActiveTab}
             items={tabItems}
             style={{ marginBottom: 0 }}
-            size="middle"
+            size={isMobile ? 'small' : 'middle'}
           />
         </div>
 
-        {/* Search + filters inline */}
-        <Flex
-          gap={10}
-          align="center"
-          wrap="wrap"
-          style={{ padding: '12px 20px', borderBottom: '1px solid #f0f0f0' }}
-        >
-          <Input
-            placeholder="Найти товар..."
-            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            allowClear
-            style={{ maxWidth: 260 }}
-            variant="filled"
-          />
-          <Select
-            placeholder="Категория"
-            options={categoryOptions}
-            value={categoryFilter}
-            onChange={setCategoryFilter}
-            allowClear
-            style={{ minWidth: 200 }}
-            size="middle"
-            suffixIcon={<FilterOutlined />}
-            variant="filled"
-          />
-          <div style={{ flex: 1 }} />
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            {filtered.length} из {products.length}
-          </Text>
-        </Flex>
+        {/* Search + filters */}
+        <div style={{ padding: isMobile ? '10px 12px' : '12px 20px', borderBottom: '1px solid #f0f0f0' }}>
+          <Flex
+            gap={10}
+            align="center"
+            wrap="wrap"
+          >
+            <Input
+              placeholder="Найти товар..."
+              prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              allowClear
+              style={{ flex: isMobile ? '1 1 100%' : '0 1 260px' }}
+              variant="filled"
+            />
+            {!isMobile && (
+              <Select
+                placeholder="Категория"
+                options={categoryOptions}
+                value={categoryFilter}
+                onChange={setCategoryFilter}
+                allowClear
+                style={{ minWidth: 200 }}
+                size="middle"
+                suffixIcon={<FilterOutlined />}
+                variant="filled"
+              />
+            )}
+            <div style={{ flex: 1 }} />
+            <Text type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+              {filtered.length} из {products.length}
+            </Text>
+          </Flex>
+        </div>
 
         <Table
           dataSource={filtered}
           columns={columns}
           rowKey="_id"
           size="small"
-          scroll={{ x: 1000 }}
+          scroll={{ x: isMobile ? 500 : 1000 }}
           pagination={{
-            pageSize,
-            showSizeChanger: true,
+            pageSize: isMobile ? 10 : pageSize,
+            showSizeChanger: !isMobile,
             pageSizeOptions: ['10', '15', '30', '50'],
             onShowSizeChange: (_, size) => setPageSize(size),
             size: 'small',
-            style: { padding: '0 16px' },
+            style: { padding: '0 12px' },
+            simple: isMobile,
           }}
-          rowSelection={{ type: 'checkbox' }}
+          rowSelection={isMobile ? undefined : { type: 'checkbox' }}
         />
       </Card>
 
       <Drawer
         title={<Text strong style={{ fontSize: 15 }}>Карточка товара</Text>}
         placement="right"
-        width={460}
+        width={isMobile ? '100%' : 460}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        styles={{ body: { padding: '16px 20px' } }}
+        styles={{ body: { padding: isMobile ? '12px 16px' : '16px 20px' } }}
         extra={
           selectedProduct && (
             <Button
@@ -362,6 +385,11 @@ export default function Products() {
                 <Text style={{ fontSize: 12 }}>{selectedProduct.category_full_path}</Text>
               </Descriptions.Item>
               <Descriptions.Item label={<Text type="secondary" style={{ fontSize: 12 }}>Город</Text>}>{selectedProduct.city}</Descriptions.Item>
+              <Descriptions.Item label={<Text type="secondary" style={{ fontSize: 12 }}>Позиция</Text>}>
+                <Tag color={selectedProduct.position <= 3 ? 'green' : selectedProduct.position <= 10 ? 'gold' : 'default'} style={{ fontSize: 12 }}>
+                  {selectedProduct.position} место
+                </Tag>
+              </Descriptions.Item>
               <Descriptions.Item label={<Text type="secondary" style={{ fontSize: 12 }}>Рейтинг</Text>}>
                 <Space>
                   <Rate disabled value={selectedProduct.rating} allowHalf style={{ fontSize: 13 }} />

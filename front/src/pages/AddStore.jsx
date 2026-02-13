@@ -8,6 +8,7 @@ import {
   Space,
   Flex,
   Steps,
+  Grid,
   message,
   Result,
 } from 'antd';
@@ -21,10 +22,13 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 
 const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 export default function AddStore() {
   const navigate = useNavigate();
   const { addStore } = useStore();
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
 
   const [marketplace, setMarketplace] = useState('kaspi');
   const [step, setStep] = useState(0); // 0=phone, 1=code, 2=done
@@ -112,23 +116,23 @@ export default function AddStore() {
   };
 
   return (
-    <div style={{ maxWidth: 520, margin: '0 auto', paddingTop: 20 }}>
+    <div style={{ maxWidth: 520, margin: '0 auto', paddingTop: isMobile ? 0 : 20 }}>
       <Button
         type="text"
         icon={<ArrowLeftOutlined />}
         onClick={() => navigate('/stores')}
-        style={{ marginBottom: 16, color: '#8c8c8c', fontWeight: 500 }}
+        style={{ marginBottom: 12, color: '#8c8c8c', fontWeight: 500 }}
       >
         Назад
       </Button>
 
-      <Card>
-        <Title level={4} style={{ textAlign: 'center', marginBottom: 24, fontWeight: 600 }}>
+      <Card styles={{ body: { padding: isMobile ? 16 : 24 } }}>
+        <Title level={4} style={{ textAlign: 'center', marginBottom: isMobile ? 16 : 24, fontWeight: 600, fontSize: isMobile ? 18 : undefined }}>
           Добавление магазина
         </Title>
 
         {/* Marketplace selector */}
-        <Flex justify="center" style={{ marginBottom: 24 }}>
+        <Flex justify="center" style={{ marginBottom: isMobile ? 16 : 24 }}>
           <Segmented
             value={marketplace}
             onChange={setMarketplace}
@@ -137,6 +141,8 @@ export default function AddStore() {
               { label: 'Halyk Market', value: 'halyk' },
             ]}
             disabled={step > 0}
+            block={isMobile}
+            style={isMobile ? { width: '100%' } : undefined}
           />
         </Flex>
 
@@ -144,10 +150,10 @@ export default function AddStore() {
         <Steps
           current={step}
           size="small"
-          style={{ marginBottom: 32 }}
+          style={{ marginBottom: isMobile ? 20 : 32 }}
           items={[
             { title: 'Телефон', icon: <MobileOutlined /> },
-            { title: 'Код из SMS', icon: <SafetyOutlined /> },
+            { title: 'Код', icon: <SafetyOutlined /> },
             { title: 'Готово', icon: <CheckCircleOutlined /> },
           ]}
         />
@@ -196,7 +202,7 @@ export default function AddStore() {
               </Text>
             )}
 
-            <Flex gap={8} justify="center" onPaste={handlePaste}>
+            <Flex gap={isMobile ? 6 : 8} justify="center" onPaste={handlePaste}>
               {code.map((digit, i) => (
                 <Input
                   key={i}
@@ -205,10 +211,10 @@ export default function AddStore() {
                   onChange={(e) => handleCodeChange(i, e.target.value)}
                   onKeyDown={(e) => handleCodeKeyDown(i, e)}
                   style={{
-                    width: 48,
-                    height: 52,
+                    width: isMobile ? 42 : 48,
+                    height: isMobile ? 46 : 52,
                     textAlign: 'center',
-                    fontSize: 20,
+                    fontSize: isMobile ? 18 : 20,
                     fontWeight: 600,
                     borderRadius: 10,
                   }}

@@ -14,6 +14,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
+import { useAuth } from '../context/AuthContext';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -109,6 +110,7 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { stores, activeStore, setActiveStore } = useStore();
+  const { user, logout } = useAuth();
 
   // Close drawer on route change
   useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
@@ -120,8 +122,15 @@ export default function AppLayout() {
     if (store) setActiveStore(store);
   };
 
-  const initials = activeStore?.name
-    ? activeStore.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+  const handleUserMenuClick = ({ key }) => {
+    if (key === 'logout') {
+      logout();
+      navigate('/login', { replace: true });
+    }
+  };
+
+  const initials = user?.name
+    ? user.name.trim().charAt(0).toUpperCase()
     : 'U';
 
   const sidebarProps = {
@@ -229,7 +238,7 @@ export default function AppLayout() {
                 }}
               />
             </Badge>
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow trigger={['click']}>
+            <Dropdown menu={{ items: userMenuItems, onClick: handleUserMenuClick }} placement="bottomRight" arrow trigger={['click']}>
               <Avatar
                 size={30}
                 style={{

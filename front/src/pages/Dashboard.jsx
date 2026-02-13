@@ -41,8 +41,10 @@ function generateLast7DaysData() {
     const label = i === 0
       ? 'Сегодня'
       : `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
+    const fullDate = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`;
     data.push({
       day: label,
+      fullDate: i === 0 ? `Сегодня, ${fullDate}` : fullDate,
       orders: Math.floor(Math.random() * 60 + 15),
     });
   }
@@ -139,10 +141,9 @@ export default function Dashboard() {
       x: { label: { style: { fontSize: isMobile ? 10 : 12, fill: '#8c8c8c' } } },
     },
     tooltip: {
-      channel: 'y',
-      valueFormatter: (v) => `${v} заказов`,
+      title: false,
+      items: [(d) => ({ name: d.fullDate, value: `${d.orders} заказов` })],
     },
-    interaction: { elementHighlight: { background: true } },
   };
 
   const areaConfig = {
@@ -170,8 +171,8 @@ export default function Dashboard() {
       },
     },
     tooltip: {
-      channel: 'y',
-      valueFormatter: (v) => `${v.toLocaleString('ru-RU')} ₸`,
+      title: false,
+      items: [(d) => ({ name: d.date, value: `${d.value.toLocaleString('ru-RU')} ₸` })],
     },
   };
 

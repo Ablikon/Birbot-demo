@@ -219,6 +219,71 @@ body {
 }
 
 /* ======================================
+   AUTH PAGES
+   ====================================== */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  padding: 24px 16px;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-card {
+  border: 1px solid #eee;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.auth-logo-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #141414;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.auth-logo-text {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  color: #141414;
+}
+
+.auth-submit-btn {
+  height: 40px !important;
+  font-weight: 500;
+  font-size: 14px !important;
+  background: #141414 !important;
+  border-color: #141414 !important;
+}
+.auth-submit-btn:hover {
+  background: #333 !important;
+  border-color: #333 !important;
+}
+
+.auth-page .ant-input-affix-wrapper {
+  border-radius: 8px;
+}
+.auth-page .ant-input-affix-wrapper-lg {
+  padding: 8px 12px;
+}
+.auth-page .ant-form-item {
+  margin-bottom: 18px;
+}
+
+/* ======================================
    SAFE AREA (notch devices)
    ====================================== */
 @supports (padding: env(safe-area-inset-bottom)) {

@@ -1,0 +1,6 @@
+export const PRODUCT_ALREADY_EXISTS_ERROR = 'У вас уже есть товар с таким SKU'
+export const ACCESS_TOKEN_NO_ERROR = 'Сперва авторизуйтесь'
+export const PRODUCT_NOT_FOUND_ERROR = 'Товар не найден'
+export const ITS_NOT_YOUR_PRODUCT_ERROR = 'Это не ваш товар'
+export const MIN_AND_MAX_PRICE_ERROR = 'Минимальная цена не может быть больше максимальной цены'
+export const MAX_DEMPING_PRODUCTS_ERROR = 'Вам необходимо или перейти на другой тариф или уменьшить кол-во товаров'

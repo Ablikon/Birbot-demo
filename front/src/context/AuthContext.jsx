@@ -1,13 +1,15 @@
 import { createContext, useContext, useState, useCallback } from 'react';
+import { authAPI, TOKEN_KEY } from '../services/api';
 
 const AuthContext = createContext(null);
 
-const STORAGE_KEY = 'birbot_auth';
+const AUTH_KEY = 'birbot_auth';
 
 function getStoredAuth() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    const token = localStorage.getItem(TOKEN_KEY);
+    const raw = localStorage.getItem(AUTH_KEY);
+    if (token && raw) return JSON.parse(raw);
   } catch {
     /* ignore */
   }
@@ -19,33 +21,46 @@ export function AuthProvider({ children }) {
 
   const isAuthenticated = !!user;
 
-  const login = useCallback(({ phone, password }) => {
-    // Mock: accept any credentials
-    // В реальности имя придёт с бэкенда
-    const mockUser = {
-      id: 'user_1',
-      name: 'Пользователь',
-      phone,
+  const login = useCallback(async ({ email, password }) => {
+    const { data } = await authAPI.login(email, password);
+    const token = data.access_token;
+    localStorage.setItem(TOKEN_KEY, token);
+
+    // Try to get profile info
+    let profile = { email };
+    try {
+      const { data: profileData } = await authAPI.getProfile();
+      profile = { ...profile, ...profileData };
+    } catch {
+      // Profile endpoint may not exist yet
+    }
+
+    const userData = {
+      id: profile._id || profile.id || 'user',
+      name: profile.name || profile.email || email,
+      email: profile.email || email,
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
-    setUser(mockUser);
-    return mockUser;
+    localStorage.setItem(AUTH_KEY, JSON.stringify(userData));
+    setUser(userData);
+    return userData;
   }, []);
 
-  const register = useCallback(({ name, phone, password }) => {
-    // Mock: accept any data
+  const register = useCallback(async ({ name, phone, password }) => {
+    // Registration endpoint not yet available — mock for now
     const mockUser = {
       id: `user_${Date.now()}`,
       name,
       phone,
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
+    localStorage.setItem(AUTH_KEY, JSON.stringify(mockUser));
+    localStorage.setItem(TOKEN_KEY, 'mock_token_' + Date.now());
     setUser(mockUser);
     return mockUser;
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(AUTH_KEY);
     setUser(null);
   }, []);
 

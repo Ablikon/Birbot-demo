@@ -1,0 +1,8 @@
+export const USER_ALREADY_EXISTS_ERROR = 'Такой пользователь уже существует'
+export const INVALID_CAPTCHA_ERROR = 'Неправильный CAPTCHA'
+export const WRONG_CREDENTIALS_ERROR = 'Неправильный логин или пароль'
+export const INVALID_PHONE_NUMBER_ERROR = 'Неправильный формат номера'
+export const INCORRECT_PIN_CODE_ERROR = 'Неправильный код'
+export const ACCOUNT_WAS_BLOCKED_ERROR = 'Ваш аккаунт заблокирован'
+export const CODE_NOT_RECEIVED = 'Мы еще не получили ваш код'
+export const TOO_MANY_REQUESTS = 'Превышено количество запросов. Пожалуйста, повторите попытку позже.'

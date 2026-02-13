@@ -4,7 +4,6 @@ import {
   Typography,
   Input,
   Button,
-  Segmented,
   Space,
   Flex,
   Steps,
@@ -27,7 +26,7 @@ const { useBreakpoint } = Grid;
 
 export default function AddStore() {
   const navigate = useNavigate();
-  const { addStore } = useStore();
+  const { addTestStore, fetchStores } = useStore();
   const screens = useBreakpoint();
   const isMobile = !screens.md;
 
@@ -85,21 +84,22 @@ export default function AddStore() {
     }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     const fullCode = code.join('');
     if (fullCode.length < 6) {
       message.error('Введите полный код');
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      addStore({
-        name: `Магазин ${phone}`,
-        marketplace,
-      });
+    try {
+      await addTestStore();
       setStep(2);
-    }, 1500);
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Ошибка при добавлении магазина';
+      message.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePaste = (e) => {

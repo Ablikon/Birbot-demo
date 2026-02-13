@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Row,
   Col,
@@ -6,6 +6,7 @@ import {
   Typography,
   Flex,
   Grid,
+  Empty,
 } from 'antd';
 import {
   RiseOutlined,
@@ -17,53 +18,11 @@ import {
 } from '@ant-design/icons';
 import { Area, Column } from '@ant-design/charts';
 import { useStore } from '../context/StoreContext';
-import productsData from '../assets/products.json';
+import { productAPI, storeAPI, orderAPI } from '../services/api';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
-
-const MONTHS_SHORT = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-
-function computeStats() {
-  const total = productsData.length;
-  const active = productsData.filter((p) => p.isActive).length;
-  const top1Count = Math.floor(total * 0.06);
-
-  return { total, active, top1Count };
-}
-
-function generateLast7DaysData() {
-  const data = [];
-  const now = new Date();
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const label = i === 0
-      ? 'Сегодня'
-      : `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
-    const fullDate = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`;
-    data.push({
-      day: label,
-      fullDate: i === 0 ? `Сегодня, ${fullDate}` : fullDate,
-      orders: Math.floor(Math.random() * 60 + 15),
-    });
-  }
-  return data;
-}
-
-function generateDailyTrend() {
-  const data = [];
-  const now = new Date();
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    data.push({
-      date: `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`,
-      value: Math.floor(Math.random() * 200000 + 50000),
-    });
-  }
-  return data;
-}
 
 const iconStyle = (bg) => ({
   width: 38,
@@ -79,41 +38,125 @@ const iconStyle = (bg) => ({
 
 export default function Dashboard() {
   const { activeStore } = useStore();
-  const stats = useMemo(computeStats, []);
-  const weeklyData = useMemo(generateLast7DaysData, []);
-  const trendData = useMemo(generateDailyTrend, []);
+  const [stats, setStats] = useState({ all: 0, dempOn: 0, dempOff: 0, first: 0, archive: 0 });
+  const [generalStats, setGeneralStats] = useState(null);
+  const [chartData, setChartData] = useState([]);
+  const [orderData, setOrderData] = useState([]);
   const screens = useBreakpoint();
   const isMobile = !screens.md;
+
+  useEffect(() => {
+    if (!activeStore?.id) return;
+    productAPI.getStats(activeStore.id).then(({ data }) => {
+      setStats(data);
+    }).catch(() => {});
+  }, [activeStore?.id]);
+
+  useEffect(() => {
+    if (!activeStore?.id) return;
+
+    // Fetch general stats for the month
+    storeAPI.getGeneralStats(activeStore.id, { filter: 'month' })
+      .then(({ data }) => setGeneralStats(data))
+      .catch(() => {});
+
+    // Fetch 30-day order chart data
+    orderAPI.getStats(activeStore.id, { filter: 'month' })
+      .then(({ data }) => {
+        // API returns { orders: { "14.01": 5, "15.01": 8 }, totalOrders, totalPrice }
+        const orders = data.orders || {};
+        const chartArr = Object.entries(orders).map(([dateKey, count]) => ({
+          date: dateKey,
+          value: typeof count === 'number' ? count : 0,
+        }));
+        // Sort by date key (DD.MM)
+        chartArr.sort((a, b) => {
+          const [da, ma] = a.date.split('.').map(Number);
+          const [db, mb] = b.date.split('.').map(Number);
+          return (ma - mb) || (da - db);
+        });
+        setChartData(chartArr);
+      })
+      .catch(() => {});
+
+    // Fetch weekly order data (last 7 days)
+    orderAPI.getStats(activeStore.id, { filter: 'week' })
+      .then(({ data }) => {
+        // API returns { orders: { "07.02": 5, "08.02": 3, ... }, totalOrders, totalPrice }
+        const orders = data.orders || {};
+        const MONTHS_SHORT = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+        const orderArr = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = dayjs().subtract(i, 'day');
+          // API key format: DD.MM (zero-padded)
+          const key = d.format('DD.MM');
+          const label = i === 0 ? 'Сегодня' : `${d.date()} ${MONTHS_SHORT[d.month()]}`;
+          const fullDate = `${d.date()} ${MONTHS_SHORT[d.month()]} ${d.year()}`;
+          orderArr.push({
+            day: label,
+            fullDate: i === 0 ? `Сегодня, ${fullDate}` : fullDate,
+            orders: orders[key] || 0,
+          });
+        }
+        setOrderData(orderArr);
+      })
+      .catch(() => {
+        // Fallback: empty 7 days
+        const MONTHS_SHORT = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+        const orderArr = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = dayjs().subtract(i, 'day');
+          const label = i === 0 ? 'Сегодня' : `${d.date()} ${MONTHS_SHORT[d.month()]}`;
+          orderArr.push({ day: label, fullDate: label, orders: 0 });
+        }
+        setOrderData(orderArr);
+      });
+  }, [activeStore?.id]);
+
+  const totalProducts = stats.all || 0;
+  const activeProducts = (stats.dempOn || 0) + (stats.dempOff || 0);
+  const top1Count = stats.first || 0;
+
+  const turnover = generalStats?.turnover?.value || 0;
+  const turnoverChange = generalStats?.turnover?.percentageDifference || 0;
+  const ordersCount = generalStats?.amountOfSells?.value || 0;
+  const ordersChange = generalStats?.amountOfSells?.percentageDifference || 0;
+
+  const formatMoney = (v) => {
+    if (v >= 1000000) return `${(v / 1000000).toFixed(1)} млн ₸`;
+    if (v >= 1000) return `${Math.round(v).toLocaleString('ru-RU')} ₸`;
+    return `${v} ₸`;
+  };
 
   const metrics = [
     {
       title: 'Выручка за месяц',
-      value: '2 847 500 ₸',
-      change: '+12.3%',
-      up: true,
+      value: formatMoney(turnover),
+      change: `${turnoverChange > 0 ? '+' : ''}${turnoverChange.toFixed(1)}%`,
+      up: turnoverChange > 0 ? true : turnoverChange < 0 ? false : null,
       icon: <DollarOutlined style={{ color: '#8c8c8c' }} />,
       bg: '#f5f5f5',
     },
     {
       title: 'Заказы',
-      value: '412',
-      change: '+8.1%',
-      up: true,
+      value: String(ordersCount),
+      change: `${ordersChange > 0 ? '+' : ''}${ordersChange.toFixed(1)}%`,
+      up: ordersChange > 0 ? true : ordersChange < 0 ? false : null,
       icon: <ShoppingOutlined style={{ color: '#8c8c8c' }} />,
       bg: '#f5f5f5',
     },
     {
       title: 'Активных товаров',
-      value: String(stats.active),
-      change: `из ${stats.total}`,
+      value: String(activeProducts),
+      change: `из ${totalProducts}`,
       up: null,
       icon: <InboxOutlined style={{ color: '#8c8c8c' }} />,
       bg: '#f5f5f5',
     },
     {
       title: 'Товаров в ТОП-1',
-      value: String(stats.top1Count),
-      change: `из ${stats.total} товаров`,
+      value: String(top1Count),
+      change: `из ${totalProducts} товаров`,
       up: null,
       icon: <TrophyOutlined style={{ color: '#8c8c8c' }} />,
       bg: '#f5f5f5',
@@ -123,7 +166,7 @@ export default function Dashboard() {
   const chartHeight = isMobile ? 220 : 300;
 
   const columnConfig = {
-    data: weeklyData,
+    data: orderData,
     xField: 'day',
     yField: 'orders',
     color: '#595959',
@@ -147,7 +190,7 @@ export default function Dashboard() {
   };
 
   const areaConfig = {
-    data: trendData,
+    data: chartData,
     xField: 'date',
     yField: 'value',
     smooth: true,
@@ -159,7 +202,7 @@ export default function Dashboard() {
     height: chartHeight,
     axis: {
       y: {
-        labelFormatter: (v) => `${(v / 1000).toFixed(0)}k`,
+        labelFormatter: (v) => v,
         grid: true,
         gridLineDash: [3, 3],
         gridStroke: '#f0f0f0',
@@ -172,7 +215,7 @@ export default function Dashboard() {
     },
     tooltip: {
       title: false,
-      items: [(d) => ({ name: d.date, value: `${d.value.toLocaleString('ru-RU')} ₸` })],
+      items: [(d) => ({ name: d.date, value: `${d.value} заказов` })],
     },
   };
 
@@ -214,7 +257,7 @@ export default function Dashboard() {
         <Col xs={24} lg={14}>
           <Card
             size="small"
-            title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Выручка за 30 дней</Text>}
+            title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Заказы за 30 дней</Text>}
             styles={{ body: { padding: isMobile ? '8px 10px 12px' : '12px 16px 16px' } }}
             style={{ height: '100%' }}
           >

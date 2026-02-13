@@ -1,58 +1,82 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { storeAPI } from '../services/api';
+import { useAuth } from './AuthContext';
 
 const StoreContext = createContext(null);
 
-const MOCK_STORES = [
-  {
-    id: 'store_1a2b3c4d',
-    name: 'ТОО "TechMarket"',
-    marketplace: 'kaspi',
-    botStatus: 'paid',
-    whatsappStatus: 'connected',
-    productsCount: 254,
-    createdAt: '2025-09-15',
-  },
-  {
-    id: 'store_5e6f7g8h',
-    name: 'ТОО "HomeGoods"',
-    marketplace: 'kaspi',
-    botStatus: 'paid',
-    whatsappStatus: 'not_connected',
-    productsCount: 0,
-    createdAt: '2025-11-20',
-  },
-];
-
 export function StoreProvider({ children }) {
-  const [stores, setStores] = useState(MOCK_STORES);
-  const [activeStore, setActiveStore] = useState(MOCK_STORES[0]);
+  const { isAuthenticated } = useAuth();
+  const [stores, setStores] = useState([]);
+  const [activeStore, setActiveStore] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const addStore = (store) => {
-    const newStore = {
-      ...store,
-      id: `store_${Date.now()}`,
-      marketplace: 'kaspi',
-      botStatus: 'unpaid',
-      whatsappStatus: 'not_connected',
-      productsCount: 0,
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    setStores((prev) => [...prev, newStore]);
-    return newStore;
-  };
-
-  const deleteStore = (id) => {
-    setStores((prev) => prev.filter((s) => s.id !== id));
-    if (activeStore?.id === id) {
-      setActiveStore((prev) => {
-        const remaining = stores.filter((s) => s.id !== id);
-        return remaining[0] || null;
-      });
+  const fetchStores = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data } = await storeAPI.getAll();
+      const mapped = data.map((s) => ({
+        id: s._id,
+        name: s.name,
+        marketplace: 'kaspi',
+        botStatus: s.isStarted ? 'paid' : 'unpaid',
+        expireDate: s.expireDate,
+        productsCount: 0,
+        ...s,
+      }));
+      setStores(mapped);
+      if (mapped.length > 0 && !activeStore) {
+        setActiveStore(mapped[0]);
+      }
+    } catch (err) {
+      // Token may be invalid or API not available
+      console.error('Failed to fetch stores:', err);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchStores();
+    } else {
+      setStores([]);
+      setActiveStore(null);
+    }
+  }, [isAuthenticated, fetchStores]);
+
+  const addTestStore = useCallback(async () => {
+    try {
+      const { data } = await storeAPI.createTest();
+      await fetchStores();
+      return data;
+    } catch (err) {
+      throw err;
+    }
+  }, [fetchStores]);
+
+  const deleteStore = useCallback(async (id) => {
+    try {
+      await storeAPI.delete(id);
+      await fetchStores();
+    } catch (err) {
+      console.error('Failed to delete store:', err);
+      // Fallback: remove locally
+      setStores((prev) => prev.filter((s) => s.id !== id));
+      if (activeStore?.id === id) {
+        setStores((prev) => {
+          const remaining = prev.filter((s) => s.id !== id);
+          setActiveStore(remaining[0] || null);
+          return remaining;
+        });
+      }
+    }
+  }, [activeStore, fetchStores]);
 
   return (
-    <StoreContext.Provider value={{ stores, activeStore, setActiveStore, addStore, deleteStore }}>
+    <StoreContext.Provider value={{
+      stores, activeStore, setActiveStore,
+      addTestStore, deleteStore, fetchStores, loading,
+    }}>
       {children}
     </StoreContext.Provider>
   );

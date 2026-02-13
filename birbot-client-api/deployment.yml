@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client-api
+  template:
+    metadata:
+      labels:
+        app: client-api
+    spec:
+      nodeSelector:
+        yandex.cloud/node-group-id: b87ljb678m7ile11jjb5 # yandex-pool-5
+      containers:
+        - name: client-api
+          image: {{image}}
+          envFrom:
+            - configMapRef:
+                name: env-configs
+          env:
+            - name: ENVIRONMENT
+              value: {{environment}}
+          ports:
+            - containerPort: 30080
+          resources:
+            requests:
+              cpu: "700m"
+              memory: "600Mi"
+            limits:
+              cpu: "1200m"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 30080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 30080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+      imagePullSecrets:
+        - name: dockerhubkey

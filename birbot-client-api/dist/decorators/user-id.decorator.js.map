@@ -1,0 +1,1 @@
+{"version":3,"file":"user-id.decorator.js","sourceRoot":"","sources":["../../src/decorators/user-id.decorator.ts"],"names":[],"mappings":";;;AAAA,2CAAuE;AAE1D,QAAA,MAAM,GAAG,IAAA,6BAAoB,EAAC,CAAC,IAAa,EAAE,GAAqB,EAAE,EAAE;IAChF,MAAM,OAAO,GAAG,GAAG,CAAC,YAAY,EAAE,CAAC,UAAU,EAAE,CAAA;IAE/C,OAAO,OAAO,CAAC,IAAI,CAAA;AACvB,CAAC,CAAC,CAAA"}

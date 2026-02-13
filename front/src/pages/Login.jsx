@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, Form, Input, Button, Typography, Flex, message } from 'antd';
-import { PhoneOutlined, LockOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -14,13 +14,12 @@ export default function Login() {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      // Simulate API delay
-      await new Promise((r) => setTimeout(r, 600));
-      login({ phone: values.phone, password: values.password });
+      await login({ email: values.email, password: values.password });
       message.success('Вы успешно вошли');
       navigate('/', { replace: true });
-    } catch {
-      message.error('Ошибка входа');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Неверный логин или пароль';
+      message.error(msg);
     } finally {
       setLoading(false);
     }
@@ -47,12 +46,12 @@ export default function Login() {
 
           <Form layout="vertical" onFinish={onFinish} requiredMark={false} size="large">
             <Form.Item
-              name="phone"
-              rules={[{ required: true, message: 'Введите номер телефона' }]}
+              name="email"
+              rules={[{ required: true, message: 'Введите логин' }]}
             >
               <Input
-                prefix={<PhoneOutlined style={{ color: '#8c8c8c' }} />}
-                placeholder="Номер телефона"
+                prefix={<UserOutlined style={{ color: '#8c8c8c' }} />}
+                placeholder="Логин"
               />
             </Form.Item>
 

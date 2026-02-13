@@ -1,0 +1,1 @@
+{"version":3,"file":"privileged-store.service.js","sourceRoot":"","sources":["../../src/privileged-store/privileged-store.service.ts"],"names":[],"mappings":";;;;;;;;;AAAA,2CAA2C;AAGpC,IAAM,sBAAsB,GAA5B,MAAM,sBAAsB;IAC/B,KAAK,CAAC,YAAY,CAAC,OAAe;QAC9B,OAAO,KAAK,CAAA;IAChB,CAAC;CACJ,CAAA;AAJY,sBAAsB;IADlC,IAAA,mBAAU,GAAE;GACA,sBAAsB,CAIlC;AAJY,wDAAsB"}

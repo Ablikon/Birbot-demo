@@ -125,7 +125,7 @@ export default function AppLayout() {
   const handleUserMenuClick = ({ key }) => {
     if (key === 'logout') {
       logout();
-      navigate('/login', { replace: true });
+      window.location.href = '/login';
     }
   };
 

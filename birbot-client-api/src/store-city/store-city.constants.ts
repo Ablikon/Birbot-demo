@@ -1,0 +1,5 @@
+export const INVALID_ID_ERROR = 'Неправильный формат id'
+export const MAX_STORE_CITY_ERROR = 'У вас максимальное количество городов'
+export const STORE_CITY_ALREADY_EXISTS_ERROR = 'Такой город уже есть'
+export const STORE_CITY_NOT_FOUND_ERROR = 'Город не найден'
+export const ITS_SHOULD_BE_NOT_EQUAL_TO_MAIN_CITY_ERROR = 'Такой город уже есть'
